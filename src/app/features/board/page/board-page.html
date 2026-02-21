@@ -1,0 +1,4 @@
+@for (list of lists(); track list.id){
+  <board-list [list]="list" />
+}
+<board-list-add class="min-w-[150px]" (listCreated)="createList($event)"/>

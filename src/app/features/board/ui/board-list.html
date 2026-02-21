@@ -1,0 +1,47 @@
+<div class="flex items-center justify-between p-4 pb-2">
+  <div class="flex items-center gap-2">
+    <h2 class="font-bold text-slate-800 tracking-tight">
+      {{ list().title }}
+    </h2>
+    <span class="px-2 py-0.5 text-xs font-semibold bg-slate-200 text-slate-600 rounded-full">
+        {{ list().cards.length }}
+      </span>
+  </div>
+
+  <button class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-lg transition-colors">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="狠5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+    </svg>
+  </button>
+</div>
+
+<div cdkDropList
+     [cdkDropListData]="list()"
+     (cdkDropListDropped)="internalDrop($event)"
+     class="flex-1 overflow-y-auto px-3 py-2 space-y-3 custom-scrollbar">
+  @for (cardItem of list().cards; track cardItem.id) {
+    <board-card  [card]="cardItem" />
+  } @empty {
+    <div class="min-h-[25%] flex flex-col items-center justify-center py-10 px-4 border-2 border-dashed border-slate-200 rounded-xl">
+      <p class="text-xs text-slate-400 font-medium">No cards in this list</p>
+    </div>
+  }
+</div>
+
+<div class="p-3">
+  <p-button
+    (onClick)="addCardAction()"
+    raised="true"
+    icon="pi pi-file-plus"
+    label="Add a new card"
+    styleClass="w-full bg-white"
+    outlined="true"
+    ariaLabel="Add a new list"
+    title="Add a new list" />
+</div>
+
+<p-dialog maskStyleClass="backdrop-blur-sm" [(visible)]="cardCreateModalVisible" header="Ajouter une nouvelle carte" [style]="{ width: '25rem' }">
+  <ng-template #headless>
+    <board-card-form-modal (created)="addCard.emit($event)" />
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,26 @@
+@let shouldDisable = hasAttemptedSubmit() && loginForm().touched() && loginForm().invalid();
+
+<h2 class="text-lg font-medium">Ajouter une nouvelle liste</h2>
+<form>
+  <p-iftalabel class="w-full">
+    <label for="title">Titre</label>
+    <input
+      class="w-full" pInputText id="title" autocomplete="off"
+      [formField]="loginForm.title" />
+    <error-message [control]="loginForm.title()" />
+  </p-iftalabel>
+  <div class="w-full flex gap-1 p-2 justify-end">
+    <p-button
+      fluid="true"
+      styleClass="w-full"
+      [raised]="true"
+      type="submit"
+      [severity]="shouldDisable ? 'secondary' : 'primary'"
+      [disabled]="shouldDisable"
+      label="Créer"
+      (onClick)="create()"
+    />
+    <p-button [raised]="true" styleClass="w-full" severity="warn" (onClick)="close()" type="button" label="Annuler" />
+  </div>
+</form>
+

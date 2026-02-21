@@ -218,8 +218,6 @@ describe('BoardStore', () => {
       expect(store.lists()[1]?.cardIds.join('|')).toEqual(
         `${card3.id}|${card1.id}`
       );
-
-
     })
   })
 })

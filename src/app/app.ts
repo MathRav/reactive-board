@@ -5,7 +5,9 @@ import { RouterOutlet } from '@angular/router';
   selector: 'app-root',
   imports: [RouterOutlet],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  host: {
+    class: 'block min-w-[100vw] w-fit min-h-[100vh] overflow-x-auto'
+  }
 })
 export class App {
   protected readonly title = signal('fintech-store');

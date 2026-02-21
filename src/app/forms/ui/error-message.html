@@ -1,0 +1,9 @@
+@if (control().touched() && control().invalid()){
+  <p-message severity="error" variant="simple">
+    <ul>
+      @for (error of control().errors(); track error) {
+        <li>{{ error.message }}</li>
+      }
+    </ul>
+  </p-message>
+}

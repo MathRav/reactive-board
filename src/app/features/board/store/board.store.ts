@@ -1,4 +1,4 @@
-import {BoardState, Card} from './board-state.types';
+import {BoardState, Card, ListVm} from './board-state.types';
 import {patchState, signalStore, withComputed, withMethods, withState} from '@ngrx/signals';
 import {computed} from '@angular/core';
 import {Id} from '@core/store/entity-base.type';
@@ -22,7 +22,7 @@ const initialState: BoardState = {
 export const BoardStore = signalStore(
   withState(initialState),
   withComputed(({ lists, cards, selectedCardId, filterQuery }) => ({
-    listsVm: computed(() => {
+    listsVm: computed((): ListVm[] => {
       const listsValue = lists();
       const q = filterQuery().trim();
       const cardsValue = cards();
@@ -115,6 +115,20 @@ export const BoardStore = signalStore(
 
           return updates;
         });
+      },
+      addList(title: string): void {
+        patchState(store, ({lists}) =>  {
+          return {
+            lists: [
+              ...lists,
+              {
+                id: crypto.randomUUID(),
+                title: title,
+                cardIds: []
+              }
+            ]
+          }
+        })
       },
       /**
        * @param cardId

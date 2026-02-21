@@ -24,6 +24,9 @@ export type List = EntityBase &  {
   cardIds: Id[];
 };
 
+export type ListVm = EntityBase & Pick<List, 'title'> & {
+  cards: Card[]
+}
 export interface BoardState {
   lists: List[];
   cards: Record<Id, Card>;
@@ -31,3 +34,4 @@ export interface BoardState {
   selectedCardId: Id | null;
   filterQuery: string;
 }
+

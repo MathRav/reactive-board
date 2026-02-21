@@ -1,0 +1,127 @@
+@let shouldDisable = hasAttemptedSubmit() && cardForm().touched() && cardForm().invalid();
+
+<h2 class="text-lg font-semibold text-slate-900">
+  {{ isUpdateMode() ? 'Edit Card' : 'Create Card' }}
+</h2>
+
+<form class="flex flex-col gap-4">
+
+  <!-- Title -->
+  <p-iftalabel class="w-full">
+    <label for="title">Title *</label>
+    <input
+      pInputText id="title" class="w-full"
+      autocomplete="off"
+      [formField]="cardForm.title" />
+    @if (cardForm.title().touched() && cardForm.title().invalid()) {
+      <p-message severity="error" variant="simple">
+        <ul>
+          @for (error of cardForm.title().errors(); track error) {
+            <li>{{ error.message }}</li>
+          }
+        </ul>
+      </p-message>
+    }
+  </p-iftalabel>
+
+  <!-- Description -->
+  <p-iftalabel class="w-full">
+    <label for="description">Description</label>
+    <textarea
+      pTextarea id="description" class="w-full" rows="3"
+      [formField]="cardForm.description">
+    </textarea>
+  </p-iftalabel>
+
+  <!-- Status -->
+  <p-iftalabel class="w-full">
+    <label for="status">Status</label>
+    <p-select
+      inputId="status" panelStyleClass="w-full"
+      [options]="statusOptions"
+      optionLabel="label"
+      optionValue="value"
+      [formField]="$any(cardForm.status)">
+    </p-select>
+  </p-iftalabel>
+
+  <!-- Priority -->
+  <div class="flex flex-col gap-1.5">
+    <span class="text-sm font-medium text-slate-700">Priority</span>
+    <p-rating [formField]="$any(cardForm.priority)">
+    </p-rating>
+  </div>
+
+  <!-- Assignee -->
+  <p-iftalabel class="w-full">
+    <label for="assignee">Assignee</label>
+    <input
+      pInputText id="assignee" class="w-full"
+      autocomplete="off"
+      [formField]="$any(cardForm.assignee)" />
+  </p-iftalabel>
+
+  <!-- Due Date -->
+  <p-iftalabel class="w-full">
+    <label for="dueDate">Due Date</label>
+    <p-datepicker
+      inputId="dueDate" styleClass="w-full"
+      [formField]="$any(cardForm.dueDate)"
+      [showClear]="true"
+      dateFormat="mm/dd/yy" />
+  </p-iftalabel>
+
+  <!-- Labels -->
+  <div class="flex flex-col gap-2">
+    <span class="text-sm font-medium text-slate-700">Labels</span>
+    @if (cardForm.labels().value().length > 0) {
+      <div class="flex flex-wrap gap-1.5">
+        @for (label of cardForm.labels().value(); track label) {
+          <board-chip [label]="label">
+            <button
+              type="button"
+              class="hover:text-red-500 transition-colors leading-none"
+              (click)="removeLabel(label)">
+              <i class="pi pi-times" style="font-size: 0.5rem"></i>
+            </button>
+          </board-chip>
+        }
+      </div>
+    }
+    <div class="flex gap-2">
+      <input
+        pInputText class="flex-1"
+        placeholder="Add a label..."
+        autocomplete="off"
+        [formField]="labelForm"
+        (keydown.enter)="$event.preventDefault(); addLabel()" />
+      <p-button
+        type="button"
+        icon="pi pi-plus"
+        [raised]="true"
+        severity="secondary"
+        (onClick)="addLabel()" />
+      <error-message [control]="labelForm()" />
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex gap-2 pt-2 border-t border-slate-100">
+    <p-button
+      type="button"
+      fluid="true"
+      [raised]="true"
+      [severity]="shouldDisable ? 'secondary' : 'primary'"
+      [disabled]="shouldDisable"
+      [label]="isUpdateMode() ? 'Update' : 'Create'"
+      (onClick)="save()" />
+    <p-button
+      type="button"
+      fluid="true"
+      [raised]="true"
+      severity="warn"
+      label="Cancel"
+      (onClick)="close()" />
+  </div>
+
+</form>

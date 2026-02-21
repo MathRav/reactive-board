@@ -1,0 +1,21 @@
+<!-- In-place button -->
+<div class="flex bg-white justify-center items-center p-8 rounded-3xl border-dashed min-w-[250px] transition-all duration-300"
+     [class.opacity-0]="!isInView()"
+     [class.scale-95]="!isInView()"
+     [class.pointer-events-none]="!isInView()">
+  <p-button (onClick)="visible.set(true)" label="add a new list" icon="pi pi-folder-plus"/>
+</div>
+
+<!-- Floating button (bottom-right when scrolled out of view) -->
+<div class="fixed bottom-6 right-6 z-50 transition-all duration-300 justify-center items-center rounded-3xl"
+     [class.opacity-0]="isInView()"
+     [class.translate-y-4]="isInView()"
+     [class.pointer-events-none]="isInView()">
+  <p-button (onClick)="visible.set(true)" label="add a new list" icon="pi pi-folder-plus" styleClass="shadow-xl rounded-full"/>
+</div>
+
+<p-dialog maskStyleClass="backdrop-blur-sm" [(visible)]="visible" header="Ajouter une nouvelle liste" [style]="{ width: '25rem' }">
+  <ng-template #headless>
+    <board-list-add-modal (closed)="visible.set(false)" (created)="create($event.title)" />
+  </ng-template>
+</p-dialog>

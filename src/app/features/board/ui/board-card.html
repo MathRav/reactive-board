@@ -1,0 +1,50 @@
+<div class="flex items-center justify-end">
+  <p-button icon="pi pi-trash" />
+</div>
+<div class="flex items-center justify-between mb-3">
+  <span [class]="'px-2 py-0.5 rounded-full text-xs font-semibold border ' + statusClasses[card().status]">
+    {{ card().status }}
+  </span>
+
+  @if (card().priority) {
+    <div class="flex items-center gap-1 text-slate-500">
+      <span class="text-xs font-medium">P{{ card().priority }}</span>
+      <div class="h-2 w-2 rounded-full"
+           [ngClass]="{'bg-red-500': card().priority! >= 3, 'bg-amber-500': card().priority === 2, 'bg-blue-400': card().priority! <= 1}">
+      </div>
+    </div>
+  }
+</div>
+
+<h3 class="mb-1 text-lg font-bold text-slate-900 leading-tight">
+  {{ card().title }}
+</h3>
+<p class="mb-4 text-sm text-slate-600 line-clamp-2">
+  {{ card().description }}
+</p>
+
+@if (card().labels.length > 0) {
+  <div class="flex flex-wrap gap-1.5 mb-4">
+    @for (label of card().labels; track label) {
+      <board-chip [label]="label" />
+    }
+  </div>
+}
+
+<div class="flex items-center justify-between pt-4 border-t border-slate-100">
+  <div class="flex items-center gap-2">
+    <div class="h-7 w-7 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-[10px] text-white font-bold uppercase">
+      {{ card().assignee ? card().assignee?.substring(0, 2) : '??' }}
+    </div>
+    <span class="text-xs font-medium text-slate-700">{{ card().assignee || 'Unassigned' }}</span>
+  </div>
+
+  @if (card().dueDate) {
+    <div class="text-[11px] text-slate-400 flex items-center gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+      {{ card().dueDate | date:'MMM d' }}
+    </div>
+  }
+</div>
