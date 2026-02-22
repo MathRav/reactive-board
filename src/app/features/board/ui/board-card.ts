@@ -1,9 +1,9 @@
 import {Component, input, output} from '@angular/core';
 import {Card, StatusEnum} from '../store/board-state.types';
 import {DatePipe, NgClass} from '@angular/common';
-import {CdkDrag} from '@angular/cdk/drag-drop';
 import {Button} from 'primeng/button';
 import {BoardChip} from './board-chip/board-chip';
+import {CdkDragPlaceholder} from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'board-card',
@@ -13,11 +13,11 @@ import {BoardChip} from './board-chip/board-chip';
     DatePipe,
     Button,
     BoardChip,
+    CdkDragPlaceholder,
   ],
   host: {
-    class: 'rounded-md group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-sm transition-all hover:shadow-md hover:border-blue-300'
-  },
-  hostDirectives: [CdkDrag]
+    class: 'rounded-md flex flex-col group relative overflow-hidden rounded-xl border border-slate-200 !bg-white !p-5 shadow-sm transition-[box-shadow,border-color] hover:shadow-md hover:border-blue-300'
+  }
 })
 export class BoardCard {
   onDelete = output();

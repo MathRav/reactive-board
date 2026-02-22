@@ -1,7 +1,7 @@
 import {Component, input, model, output} from '@angular/core';
 import {ListVm} from '../store/board-state.types';
 import {BoardCard} from './board-card';
-import {CdkDragDrop, CdkDropList} from '@angular/cdk/drag-drop';
+import {CdkDrag, CdkDragDrop, CdkDropList} from '@angular/cdk/drag-drop';
 import {Id} from '@core/store/entity-base.type';
 import {Button} from 'primeng/button';
 import {CreateCardInput} from '../store/board-actions.type';
@@ -16,7 +16,8 @@ import {BoardCardFormModal} from './board-card-form-modal/board-card-form-modal'
     CdkDropList,
     Button,
     Dialog,
-    BoardCardFormModal
+    BoardCardFormModal,
+    CdkDrag,
   ],
   host: {
     class: 'w-[400px] max-w-[100vw] flex flex-col rounded-3xl p-4 w-80 shrink-0 h-full max-h-screen bg-slate-50/50 rounded-2xl border border-slate-200/60 shadow-sm'
@@ -45,7 +46,12 @@ export class BoardList {
     });
   }
 
-  addCardAction(): void {
+  displayAddCardModal(): void {
     this.cardCreateModalVisible.set(true);
+  }
+
+  addCardAction(data: CreateCardInput): void {
+    this.cardCreateModalVisible.set(false);
+    this.addCard.emit(data);
   }
 }

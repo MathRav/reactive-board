@@ -13,15 +13,7 @@
       pInputText id="title" class="w-full"
       autocomplete="off"
       [formField]="cardForm.title" />
-    @if (cardForm.title().touched() && cardForm.title().invalid()) {
-      <p-message severity="error" variant="simple">
-        <ul>
-          @for (error of cardForm.title().errors(); track error) {
-            <li>{{ error.message }}</li>
-          }
-        </ul>
-      </p-message>
-    }
+    <error-message [control]="cardForm.title()"/>
   </p-iftalabel>
 
   <!-- Description -->
@@ -29,12 +21,14 @@
     <label for="description">Description</label>
     <textarea
       pTextarea id="description" class="w-full" rows="3"
-      [formField]="cardForm.description">
+      [value]="cardForm.description().value()"
+      (change)="cardForm.description().setControlValue($any($event.target).value)"
+    >
     </textarea>
   </p-iftalabel>
 
   <!-- Status -->
-  <p-iftalabel class="w-full">
+  <p-fluid class="w-full">
     <label for="status">Status</label>
     <p-select
       inputId="status" panelStyleClass="w-full"
@@ -43,7 +37,7 @@
       optionValue="value"
       [formField]="$any(cardForm.status)">
     </p-select>
-  </p-iftalabel>
+  </p-fluid>
 
   <!-- Priority -->
   <div class="flex flex-col gap-1.5">
@@ -62,14 +56,14 @@
   </p-iftalabel>
 
   <!-- Due Date -->
-  <p-iftalabel class="w-full">
+  <p-fluid class="w-full">
     <label for="dueDate">Due Date</label>
     <p-datepicker
       inputId="dueDate" styleClass="w-full"
       [formField]="$any(cardForm.dueDate)"
       [showClear]="true"
       dateFormat="mm/dd/yy" />
-  </p-iftalabel>
+  </p-fluid>
 
   <!-- Labels -->
   <div class="flex flex-col gap-2">
@@ -80,7 +74,7 @@
           <board-chip [label]="label">
             <button
               type="button"
-              class="hover:text-red-500 transition-colors leading-none"
+              class="hover:text-red-500 transition-colors leading-none cursor-pointer"
               (click)="removeLabel(label)">
               <i class="pi pi-times" style="font-size: 0.5rem"></i>
             </button>
@@ -100,9 +94,11 @@
         icon="pi pi-plus"
         [raised]="true"
         severity="secondary"
-        (onClick)="addLabel()" />
-      <error-message [control]="labelForm()" />
+        [disabled]="labelForm().invalid()"
+        (onClick)="addLabel()"
+      />
     </div>
+    <error-message [control]="labelForm()"/>
   </div>
 
   <!-- Actions -->

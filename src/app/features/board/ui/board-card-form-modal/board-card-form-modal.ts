@@ -11,9 +11,10 @@ import {Rating} from 'primeng/rating';
 import {Select} from 'primeng/select';
 import {DatePicker} from 'primeng/datepicker';
 import {Button} from 'primeng/button';
-import {Message} from 'primeng/message';
 import {BoardChip} from '../board-chip/board-chip';
 import {ErrorMessage} from '../../../../forms/ui/error-message';
+import {markAllAsTouched} from '../../../../forms/utils/form.utils';
+import {Fluid} from 'primeng/fluid';
 
 @Component({
   selector: 'board-card-form-modal',
@@ -26,10 +27,10 @@ import {ErrorMessage} from '../../../../forms/ui/error-message';
     Select,
     DatePicker,
     Button,
-    Message,
     FormField,
     BoardChip,
     ErrorMessage,
+    Fluid,
   ],
   host: {
     class: 'w-full flex flex-col p-4 gap-4',
@@ -81,7 +82,7 @@ export class BoardCardFormModal {
     if (!current.includes(label)) {
       this.cardForm.labels().setControlValue([...current, label]);
     }
-    this.labelForm().setControlValue('');
+    this.labelForm().reset('');
   }
 
   protected removeLabel(label: string): void {
@@ -91,7 +92,7 @@ export class BoardCardFormModal {
 
   protected save(): void {
     this.hasAttemptedSubmit.set(true);
-    this.cardForm().markAsTouched();
+    markAllAsTouched(this.cardForm);
     if (this.cardForm().invalid()) return;
     const v = this.cardForm().value();
     if (this.isUpdateMode()) {
