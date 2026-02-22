@@ -1,0 +1,15 @@
+<section class="w-full  h-fit p-5 rounded-3xl bg-white flex gap-5  justify-center">
+  <div class="flex flex-col gap-2">
+    <label for="keyword">Keyword</label>
+    <input pInputText id="keyword" aria-describedby="keyword-help" [formField]="searchForm"  />
+  </div>
+  <div class="flex items-end gap-1">
+    <p-button icon="pi pi-search" (onClick)="search()" ariaLabel="Search" />
+    <p-button label="clear" (onClick)="reset()" ariaLabel="Reset" severity="danger" />
+  </div>
+</section>
+@if (initialValue()) {
+  <section class="w-full py-1 rounded-3xl flex justify-center bg-white">
+    <small>Current keyword : {{initialValue()}}</small>
+  </section>
+}

@@ -1,4 +1,7 @@
-@for (list of lists(); track list.id){
-  <board-list (dropped)="moveCard(list.id,$event.cardId, $event.currentIndex)" (addCard)="addCard(list.id,$event)" [list]="list" />
-}
-<board-list-add class="min-w-[150px]" (listCreated)="createList($event)"/>
+<board-card-search class="justify-center top-[5px] left-[5px]" [initialValue]="keyword()" (keywordUpdated)="setKeyword($event)" />
+<section class="flex gap-2 items-center h-full w-full">
+  @for (list of lists(); track list.id){
+    <board-list (dropped)="moveCard(list.id,$event.cardId, $event.currentIndex)" (addCard)="addCard(list.id,$event)" [list]="list" />
+  }
+  <board-list-add class="min-w-[150px]" (listCreated)="createList($event)"/>
+</section>
