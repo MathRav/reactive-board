@@ -34,9 +34,6 @@ export const BoardStore = signalStore(
           const currentCard = cardsValue[cardId];
           if (!currentCard) return acc;
 
-          console.log({
-            q
-          })
           if (!q || currentCard.title.includes(q)) {
             acc.push(currentCard);
           }
