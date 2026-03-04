@@ -31,11 +31,17 @@ Kanban board app (`fintech-store`) -- used as the practice vehicle for NgRx Sign
 - Spec summary: listsVm computed that joins lists+cards, selectedCard computed, filterQuery filtering
 - Review notes: Clean computed separation. Cards stored as Record<Id, Card> with cardIds in lists.
 
-## Milestone 3 -- withHooks -- In Progress
+## Milestone 3 -- withHooks -- Done
 - Key concepts: withHooks, onInit lifecycle, Angular effect(), localStorage persistence, patchState hydration
 - Spec summary: Persist board state (lists, cards, filterQuery) to localStorage using withHooks onInit + effect(). Hydrate on store init, save reactively on change.
 - Tasks: 11 tasks covering cleanup, helpers, withHooks integration, and 3 tests
 - Stretch goals: resetBoard method, schema versioning, debounced save with untracked()
+- Review 1 notes: Missing try/catch on hydration, no tests, stale console.log
+- Review 2 notes (final):
+  - GOOD: All review 1 fixes applied (error handling added, console.log cleaned). Correct withHooks+effect pattern, clean BoardLocalState type, withProps for DI
+  - MINOR: Double ErrorHandler invocation (NotificationService already calls it + store calls it again) -- quick fix recommended before M4
+  - DEFERRED TO M7: LocalStorageService parse error contract, schema versioning on hydrated data
+  - UNDERSTOOD: effect() redundant write on init -- developer should grasp why before building withPersistence
 
 ---
 

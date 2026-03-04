@@ -1,6 +1,6 @@
 import {BoardState, Card, ListVm} from './board-state.types';
-import {patchState, signalStore, withComputed, withMethods, withState} from '@ngrx/signals';
-import {computed} from '@angular/core';
+import {patchState, signalStore, withComputed, withHooks, withMethods, withProps, withState} from '@ngrx/signals';
+import {computed, effect, inject} from '@angular/core';
 import {Id} from '@core/store/entity-base.type';
 import {CardUpdateInput, CreateCardInput} from './board-actions.type';
 import {
@@ -10,6 +10,9 @@ import {
   removeCardInLists, updateCardData,
   updateListElement
 } from './board.util';
+import {LocalStorageService} from '@core/local-storage/local-storage.service';
+import {BOARD_LOCAL_STATE_KEY, BoardLocalState} from './board.local-state.utils';
+import {NotificationService} from '@core/errors/notification.service';
 
 const initialState: BoardState = {
   boardId: null,
@@ -20,7 +23,45 @@ const initialState: BoardState = {
 }
 
 export const BoardStore = signalStore(
+  withProps(() => {
+    return {
+      _localStorageService: inject(LocalStorageService),
+      _notificationService: inject(NotificationService),
+    };
+  }),
   withState(initialState),
+  withHooks({
+    onInit: (store) => {
+      const {lists, cards, filterQuery, _localStorageService, _notificationService} = store;
+
+      try{
+        const initialState = _localStorageService.get<BoardLocalState>(BOARD_LOCAL_STATE_KEY);
+        if(initialState){
+          patchState(store, {
+            lists: initialState.lists,
+            cards: initialState.cards,
+            filterQuery: initialState.filterQuery
+          })
+        }
+      }
+      catch (error: unknown){
+        _notificationService.error('An error occured when loading data from local storage', error);
+      }
+
+      effect(() => {
+        try{
+          _localStorageService.set(BOARD_LOCAL_STATE_KEY, {
+            lists: lists(),
+            cards: cards(),
+            filterQuery: filterQuery()
+          });
+        }
+        catch (error: unknown){
+          _notificationService.error('An error occured when saving data to local storage', error);
+        }
+      });
+    },
+  }),
   withComputed(({ lists, cards, selectedCardId, filterQuery }) => ({
     listsVm: computed((): ListVm[] => {
       const listsValue = lists();

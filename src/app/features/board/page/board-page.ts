@@ -32,9 +32,6 @@ export class BoardPage {
   }
 
   setKeyword(keyword: string): void {
-    console.log({
-      keyword
-    })
     this.#store.setFilterQuery(keyword);
   }
 
