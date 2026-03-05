@@ -7,6 +7,7 @@ import {CreateCardInput} from '../store/board-actions.type';
 import {Id} from '@core/store/entity-base.type';
 import {CdkScrollable} from '@angular/cdk/overlay';
 import {BoardCardSearch} from '../ui/board-card-search';
+import {ProgressSpinner} from 'primeng/progressspinner';
 
 @Component({
   selector: 'board',
@@ -15,7 +16,8 @@ import {BoardCardSearch} from '../ui/board-card-search';
   imports: [
     BoardList,
     BoardListAdd,
-    BoardCardSearch
+    BoardCardSearch,
+    ProgressSpinner
   ],
   host: {
     class: 'flex flex-col gap-2 min-w-full h-[100vh] bg-slate-200 pb-25',
@@ -26,6 +28,7 @@ export class BoardPage {
   readonly #store = inject(BoardStore);
   readonly lists = this.#store.listsVm;
   readonly keyword=  this.#store.filterQuery;
+  readonly loading = this.#store.loading;
 
   createList({title}: {title: string}): void {
     this.#store.addList(title);

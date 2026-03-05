@@ -11,8 +11,8 @@ Kanban board app (`fintech-store`) -- used as the practice vehicle for NgRx Sign
 |---|---------|---------------|--------|
 | 1 | `withState` + `withMethods` | Core board: lists, cards, CRUD | Done |
 | 2 | `withComputed` | `listsVm`, filtered cards, selected card | Done |
-| 3 | `withHooks` | Persist board to localStorage | In Progress |
-| 4 | `rxMethod` | Debounced search, simulated API calls | Pending |
+| 3 | `withHooks` | Persist board to localStorage | Done |
+| 4 | `rxMethod` | Debounced search, simulated API calls | In Progress |
 | 5 | `withLinkedState` | Writable state that resets when a source signal changes | Pending |
 | 6 | State tracking | Undo/redo for card moves | Pending |
 | 7 | Custom store features | Extract reusable `withPersistence(key)` | Pending |
@@ -44,6 +44,12 @@ Kanban board app (`fintech-store`) -- used as the practice vehicle for NgRx Sign
   - UNDERSTOOD: effect() redundant write on init -- developer should grasp why before building withPersistence
 
 ---
+
+## Milestone 4 -- rxMethod -- In Progress
+- Resources: NgRx Signal Store rxMethod docs, @ngrx/operators tapResponse
+- Key concepts: rxMethod, RxJS pipelines inside signal store, debounceTime, switchMap, tapResponse, optimistic updates, error revert
+- Spec summary: Two features — (A) convert search to debounced type-ahead using rxMethod<string> with debounceTime+distinctUntilChanged, (B) simulated async card archival using rxMethod<Id> with switchMap+timer+tapResponse for optimistic update/revert pattern
+- Review notes: --
 
 ## Notes
 - Developer identified the full curriculum themselves -- good self-direction

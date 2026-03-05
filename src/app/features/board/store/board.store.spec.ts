@@ -4,7 +4,7 @@ import {TestBed} from '@angular/core/testing';
 import {BoardStore} from './board.store';
 import {patchState} from '@ngrx/signals';
 import {unprotected} from '@ngrx/signals/testing';
-import {cardMockFactory, listMockFactory} from './board.mock';
+import {cardMockFactory, listMockFactory} from './board.mock.factories.utils';
 import {CardUpdateInput, CreateCardInput} from './board-actions.type';
 
 describe('BoardStore', () => {

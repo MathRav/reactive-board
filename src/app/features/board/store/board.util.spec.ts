@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {listMockFactory} from './board.mock';
+import {listMockFactory} from './board.mock.factories.utils';
 import {moveCardInList} from './board.util';
 
 describe('BoardUtil', () => {

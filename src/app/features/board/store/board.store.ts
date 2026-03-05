@@ -13,6 +13,10 @@ import {
 import {LocalStorageService} from '@core/local-storage/local-storage.service';
 import {BOARD_LOCAL_STATE_KEY, BoardLocalState} from './board.local-state.utils';
 import {NotificationService} from '@core/errors/notification.service';
+import {rxMethod} from '@ngrx/signals/rxjs-interop';
+import {catchError, EMPTY, finalize, map, of, pipe, switchMap, tap, timeout, timer} from 'rxjs';
+import {MOCK_BOARD_STATE} from './board.mock.constants';
+import { tapResponse } from '@ngrx/operators';
 
 const initialState: BoardState = {
   boardId: null,
@@ -20,6 +24,7 @@ const initialState: BoardState = {
   filterQuery: '',
   lists: [],
   selectedCardId: null,
+  loading: false,
 }
 
 export const BoardStore = signalStore(
@@ -30,38 +35,6 @@ export const BoardStore = signalStore(
     };
   }),
   withState(initialState),
-  withHooks({
-    onInit: (store) => {
-      const {lists, cards, filterQuery, _localStorageService, _notificationService} = store;
-
-      try{
-        const initialState = _localStorageService.get<BoardLocalState>(BOARD_LOCAL_STATE_KEY);
-        if(initialState){
-          patchState(store, {
-            lists: initialState.lists,
-            cards: initialState.cards,
-            filterQuery: initialState.filterQuery
-          })
-        }
-      }
-      catch (error: unknown){
-        _notificationService.error('An error occured when loading data from local storage', error);
-      }
-
-      effect(() => {
-        try{
-          _localStorageService.set(BOARD_LOCAL_STATE_KEY, {
-            lists: lists(),
-            cards: cards(),
-            filterQuery: filterQuery()
-          });
-        }
-        catch (error: unknown){
-          _notificationService.error('An error occured when saving data to local storage', error);
-        }
-      });
-    },
-  }),
   withComputed(({ lists, cards, selectedCardId, filterQuery }) => ({
     listsVm: computed((): ListVm[] => {
       const listsValue = lists();
@@ -89,7 +62,7 @@ export const BoardStore = signalStore(
     }),
   })),
   withMethods((store) => {
-    const {cards, selectedCardId, lists} = store;
+    const {cards, selectedCardId, lists, _notificationService, _localStorageService} = store;
 
     return {
       /** write methods **/
@@ -252,7 +225,57 @@ export const BoardStore = signalStore(
             [cardId]: updatedCard,
           }
         }))
-      }
+      },
+      loadBoard: rxMethod<Id>(
+        pipe(
+          tap(() => patchState(store, {
+            loading: true
+          })),
+          switchMap((id) => {
+            const cached = _localStorageService.get<BoardLocalState>(BOARD_LOCAL_STATE_KEY);
+            if(cached){
+              return of(cached)
+            } else {
+              return timer(1000).pipe(
+                map(() => ({
+                  ...MOCK_BOARD_STATE,
+                  boardId: id,
+                }))
+              )
+            }
+          }),
+          tapResponse({
+              next: (data) => patchState(store, {
+                ...data,
+                loading: false,
+              }),
+              error: (error) => {
+                _notificationService.error('An error occured during the initialization of the board', error);
+                patchState(store, {loading: false})
+              }
+            })
+        )
+      ),
     }
-  })
+  }),
+  withHooks({
+    onInit: (store) => {
+      const {lists, cards, filterQuery, _notificationService, _localStorageService, loadBoard, boardId} = store;
+      loadBoard(MOCK_BOARD_STATE.boardId);
+
+      effect(() => {
+        try{
+          _localStorageService.set(BOARD_LOCAL_STATE_KEY, {
+            lists: lists(),
+            cards: cards(),
+            filterQuery: filterQuery(),
+            boardId: boardId()
+          });
+        }
+        catch (error: unknown){
+          _notificationService.error('An error occured when saving data to local storage', error);
+        }
+      });
+    },
+  }),
 );

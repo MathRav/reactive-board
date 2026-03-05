@@ -33,5 +33,6 @@ export interface BoardState {
   boardId: Id | null;
   selectedCardId: Id | null;
   filterQuery: string;
+  loading: boolean;
 }
 
