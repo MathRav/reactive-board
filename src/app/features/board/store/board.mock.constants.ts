@@ -129,4 +129,6 @@ export const MOCK_BOARD_STATE = {
   selectedCardId: null,
   filterQuery: '',
   loading:false,
+  history: [],
+  future: []
 } as const satisfies BoardState;

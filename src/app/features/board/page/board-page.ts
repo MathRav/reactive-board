@@ -10,6 +10,7 @@ import {BoardCardSearch} from '../ui/board-card-search';
 import {ProgressSpinner} from 'primeng/progressspinner';
 import {BoardCardFormModal} from '../ui/board-card-form-modal/board-card-form-modal';
 import {Dialog} from 'primeng/dialog';
+import {BoardToolbar} from '../ui/board-toolbar';
 
 @Component({
   selector: 'board',
@@ -21,7 +22,8 @@ import {Dialog} from 'primeng/dialog';
     BoardCardSearch,
     ProgressSpinner,
     BoardCardFormModal,
-    Dialog
+    Dialog,
+    BoardToolbar
   ],
   host: {
     class: 'flex flex-col gap-2 min-w-full h-[100vh] bg-slate-200 pb-25',
@@ -34,6 +36,8 @@ export class BoardPage {
   readonly keyword=  this.#store.filterQuery;
   readonly loading = this.#store.loading;
   readonly selectedCard = this.#store.selectedCard;
+  readonly canUndo = this.#store.canUndo;
+  readonly canRedo = this.#store.canRedo;
 
   readonly hasSelectedCard = computed(() => Boolean(this.selectedCard()));
 
@@ -68,5 +72,13 @@ export class BoardPage {
     }
     this.#store.updateCard(selectedId, updateCardInput);
     this.#store.selectCard(null);
+  }
+
+  undo(): void {
+    this.#store.undo();
+  }
+
+  redo(): void {
+    this.#store.redo();
   }
 }

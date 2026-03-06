@@ -1,10 +1,19 @@
-import {BoardState, Card, ListVm} from './board-state.types';
-import {patchState, signalStore, withComputed, withHooks, withMethods, withProps, withState} from '@ngrx/signals';
+import {BoardState, Card, List, ListVm} from './board-state.types';
+import {
+  PartialStateUpdater,
+  patchState,
+  signalStore,
+  withComputed,
+  withHooks,
+  withMethods,
+  withProps,
+  withState
+} from '@ngrx/signals';
 import {computed, effect, inject} from '@angular/core';
 import {Id} from '@core/store/entity-base.type';
 import {CardUpdateInput, CreateCardInput} from './board-actions.type';
 import {
-  cardById,
+  cardById, cardIndexInList, listByCardId,
   listById,
   moveCardInList,
   removeCardInLists, updateCardData,
@@ -14,7 +23,7 @@ import {LocalStorageService} from '@core/local-storage/local-storage.service';
 import {BOARD_LOCAL_STATE_KEY, BoardLocalState} from './board.local-state.utils';
 import {NotificationService} from '@core/errors/notification.service';
 import {rxMethod} from '@ngrx/signals/rxjs-interop';
-import {catchError, EMPTY, finalize, map, of, pipe, switchMap, tap, timeout, timer} from 'rxjs';
+import {map, of, pipe, switchMap, tap, timer} from 'rxjs';
 import {MOCK_BOARD_STATE} from './board.mock.constants';
 import { tapResponse } from '@ngrx/operators';
 
@@ -25,6 +34,8 @@ const initialState: BoardState = {
   lists: [],
   selectedCardId: null,
   loading: false,
+  history: [],
+  future: [],
 }
 
 export const BoardStore = signalStore(
@@ -35,7 +46,7 @@ export const BoardStore = signalStore(
     };
   }),
   withState(initialState),
-  withComputed(({ lists, cards, selectedCardId, filterQuery }) => ({
+  withComputed(({ lists, cards, selectedCardId, filterQuery, history, future }) => ({
     listsVm: computed((): ListVm[] => {
       const listsValue = lists();
       const q = filterQuery().trim();
@@ -60,9 +71,84 @@ export const BoardStore = signalStore(
       const cardsValue = cards();
       return id ? cardsValue[id] ?? null : null;
     }),
+    canUndo: computed(() => Boolean(history().length)),
+    canRedo: computed(() => Boolean(future().length)),
   })),
   withMethods((store) => {
-    const {cards, selectedCardId, lists, _notificationService, _localStorageService} = store;
+    const {cards, selectedCardId, lists, _notificationService, _localStorageService, history, future} = store;
+
+    /**
+     * @param cardId
+     * @param toListId
+     * @param index
+     */
+    const moveCard = (cardId: Id, toListId: Id, index?: number, mutateHistory: boolean = true): void  => {
+      const listsValue = lists();
+      const cardsValue = cards();
+      const initialTarget = listById(toListId, listsValue);
+
+      if (!initialTarget) return;
+
+      const initialList = listByCardId(cardId, listsValue) as List;
+      const initialCardIndex = cardIndexInList(cardId, initialList) as number;
+
+      if(!cardById(cardId, cardsValue)){
+        const listsRepaired = removeCardInLists(cardId, listsValue);
+        if(listsRepaired !== listsValue){
+          patchState(store, { lists: listsRepaired });
+        }
+        return;
+      }
+
+      let normalizedLists = removeCardInLists(cardId, listsValue);
+
+      const normalizedInitialTarget = listById(toListId, normalizedLists);
+      if(!normalizedInitialTarget){
+        if(ngDevMode){
+          throw new Error(`[moveCard] Target list ${toListId} missing after normalization`)
+        }
+        return;
+      }
+      const finalTargetList = moveCardInList(cardId, normalizedInitialTarget, index);
+      if(finalTargetList === normalizedInitialTarget){
+        if(normalizedLists !== listsValue){
+          patchState(store, {
+            lists: normalizedLists
+          })
+        }
+        return;
+      }
+      const updatedLists = updateListElement(finalTargetList, normalizedLists);
+      if(updatedLists === normalizedLists){
+        return;
+      }
+      patchState(store, (state) => {
+
+        const mutations: Partial<BoardState> = ({
+          lists: updatedLists,
+          cards: {
+            ...state.cards,
+            [cardId]: {
+              ...state.cards[cardId],
+              lastUpdatedAt: Date.now()
+            }
+          },
+        });
+
+        if(mutateHistory){
+          mutations['history'] = [...state.history, {
+            cardId,
+            fromListId: initialList.id,
+            fromIndex: initialCardIndex,
+            toListId: finalTargetList.id,
+            toIndex: cardIndexInList(cardId, finalTargetList) as number,
+          }].slice(-20);
+          mutations['future'] =  []
+        }
+
+        return mutations;
+      });
+    };
 
     return {
       /** write methods **/
@@ -144,58 +230,6 @@ export const BoardStore = signalStore(
           }
         })
       },
-      /**
-       * @param cardId
-       * @param toListId
-       * @param index
-       */
-      moveCard(cardId: Id, toListId: Id, index?: number): void {
-        const listsValue = lists();
-        const cardsValue = cards();
-        const initialTarget = listById(toListId, listsValue);
-
-        if (!initialTarget) return;
-
-        if(!cardById(cardId, cardsValue)){
-          const listsRepaired = removeCardInLists(cardId, listsValue);
-          if(listsRepaired !== listsValue){
-            patchState(store, { lists: listsRepaired });
-          }
-          return;
-        }
-
-        let normalizedLists = removeCardInLists(cardId, listsValue);
-        const normalizedInitialTarget = listById(toListId, normalizedLists);
-        if(!normalizedInitialTarget){
-          if(ngDevMode){
-            throw new Error(`[moveCard] Target list ${toListId} missing after normalization`)
-          }
-          return;
-        }
-        const finalTargetList = moveCardInList(cardId, normalizedInitialTarget, index);
-        if(finalTargetList === normalizedInitialTarget){
-          if(normalizedLists !== listsValue){
-            patchState(store, {
-              lists: normalizedLists
-            })
-          }
-          return;
-        }
-        const updatedLists = updateListElement(finalTargetList, normalizedLists);
-        if(updatedLists === normalizedLists){
-          return;
-        }
-        patchState(store, (state) => ({
-          lists: updatedLists,
-          cards: {
-            ...state.cards,
-            [cardId]: {
-              ...state.cards[cardId],
-              lastUpdatedAt: Date.now()
-            }
-          }
-        }));
-      },
       updateCard(cardId: Id, updates: CardUpdateInput): void {
         const cardsValue = cards();
         const card = cardById(cardId, cardsValue);
@@ -226,6 +260,7 @@ export const BoardStore = signalStore(
           },
         }))
       },
+      moveCard,
       loadBoard: rxMethod<Id>(
         pipe(
           tap(() => patchState(store, {
@@ -256,6 +291,55 @@ export const BoardStore = signalStore(
             })
         )
       ),
+      undo: () => {
+        const historyValue = history();
+        const futureValue = future();
+
+        if(!historyValue.length){
+          return;
+        }
+
+        const lastElement = historyValue.at(-1);
+
+        if(!lastElement){
+          return;
+        }
+
+        const newFutureValue = [...futureValue, lastElement] ;
+
+        moveCard(lastElement.cardId, lastElement.fromListId, lastElement.fromIndex, false);
+
+        patchState(store, {
+          future: newFutureValue,
+          history: historyValue.slice(0,-1)
+        });
+
+      },
+      redo: () => {
+        const historyValue = history();
+        const futureValue = future();
+
+        if(!futureValue.length){
+          return;
+        }
+
+        const lastElement = futureValue.at(-1);
+        if(!lastElement){
+          return;
+        }
+
+        const newHistoryValue = [...historyValue, lastElement] ;
+        console.log({
+          future: futureValue.slice(0,-1)
+        })
+
+        moveCard(lastElement.cardId, lastElement.toListId, lastElement.toIndex, false);
+
+        patchState(store, {
+          future: futureValue.slice(0,-1),
+          history: newHistoryValue
+        });
+      }
     }
   }),
   withHooks({

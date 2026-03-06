@@ -5,6 +5,7 @@ import {CardUpdateInput} from './board-actions.type';
 export const cardById =  (id: Id, cards: BoardState['cards']): Card | null => cards[id] ?? null;
 export const listById =  (id: Id,lists: BoardState['lists']): List | null => lists.find((list) => list.id === id) ?? null;
 export const listByCardId =  (cardId: Id, lists: BoardState['lists']): List | null => lists.find((list) => list.cardIds.includes(cardId)) ?? null;
+export const cardIndexInList = (cardId: Id, list: List): number | undefined => list.cardIds.findIndex((findId) => findId === cardId);
 
 export const removeCardInList = (cardId: Id, list: List): List => {
   if(!list.cardIds.includes(cardId)){

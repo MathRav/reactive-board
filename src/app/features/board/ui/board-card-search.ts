@@ -12,7 +12,7 @@ import {Button} from 'primeng/button';
     FormField
   ],
   host: {
-    class: 'w-full flex flex-col gap-1',
+    class: 'flex flex-col gap-1',
   }
 })
 export class BoardCardSearch {

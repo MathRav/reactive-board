@@ -1,4 +1,5 @@
 import {EntityBase, Id} from '@core/store/entity-base.type';
+import {MoveHistory} from './board-history.types';
 
 export const StatusEnum = {
   TODO:'TODO',
@@ -27,12 +28,12 @@ export type List = EntityBase &  {
 export type ListVm = EntityBase & Pick<List, 'title'> & {
   cards: Card[]
 }
-export interface BoardState {
+export type BoardState =  {
   lists: List[];
   cards: Record<Id, Card>;
   boardId: Id | null;
   selectedCardId: Id | null;
   filterQuery: string;
   loading: boolean;
-}
+} & MoveHistory;
 

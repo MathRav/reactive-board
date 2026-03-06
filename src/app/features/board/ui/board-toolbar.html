@@ -1,0 +1,12 @@
+@let shouldDisableUndo = !canUndo();
+@let shouldDisableRedo = !canRedo();
+<p-button icon="pi pi-undo"
+          [severity]="shouldDisableUndo ?  'secondary':'primary'"
+          [disabled]="shouldDisableUndo"
+          (onClick)="onUndo.emit()"
+          ariaLabel="undo" />
+<p-button icon="pi pi-refresh"
+          [severity]="shouldDisableRedo ?  'secondary':'primary'"
+          [disabled]="shouldDisableRedo"
+          (onClick)="onRedo.emit()"
+          ariaLabel="redo" />

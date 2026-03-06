@@ -3,7 +3,10 @@
     <p-progress-spinner ariaLabel="loading" />
   </div>
 } @else {
-  <board-card-search class="justify-center top-[5px] left-[5px]" [initialValue]="keyword()" (keywordUpdated)="setKeyword($event)" />
+  <div class="flex gap-5 justify-center items-center">
+    <board-card-search class="justify-center top-[5px] left-[5px]" [initialValue]="keyword()" (keywordUpdated)="setKeyword($event)" />
+    <board-toolbar [canUndo]="canUndo()" [canRedo]="canRedo()" (onUndo)="undo()"  (onRedo)="redo()"/>
+  </div>
   <section class="flex gap-2 items-center h-full w-full">
     @for (list of lists(); track list.id){
       <board-list
