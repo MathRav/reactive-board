@@ -223,7 +223,7 @@ export const BoardStore = signalStore(
           cards: {
             ...state.cards,
             [cardId]: updatedCard,
-          }
+          },
         }))
       },
       loadBoard: rxMethod<Id>(

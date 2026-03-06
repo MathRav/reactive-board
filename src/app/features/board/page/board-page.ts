@@ -1,13 +1,15 @@
-import {Component, inject} from '@angular/core';
+import {Component, computed, inject, linkedSignal} from '@angular/core';
 import {BoardStore} from '../store/board.store';
 import {BoardList} from '../ui/board-list';
 import {CdkDropListGroup} from '@angular/cdk/drag-drop';
 import {BoardListAdd} from '../ui/board-list-add';
-import {CreateCardInput} from '../store/board-actions.type';
+import {CardUpdateInput, CreateCardInput} from '../store/board-actions.type';
 import {Id} from '@core/store/entity-base.type';
 import {CdkScrollable} from '@angular/cdk/overlay';
 import {BoardCardSearch} from '../ui/board-card-search';
 import {ProgressSpinner} from 'primeng/progressspinner';
+import {BoardCardFormModal} from '../ui/board-card-form-modal/board-card-form-modal';
+import {Dialog} from 'primeng/dialog';
 
 @Component({
   selector: 'board',
@@ -17,7 +19,9 @@ import {ProgressSpinner} from 'primeng/progressspinner';
     BoardList,
     BoardListAdd,
     BoardCardSearch,
-    ProgressSpinner
+    ProgressSpinner,
+    BoardCardFormModal,
+    Dialog
   ],
   host: {
     class: 'flex flex-col gap-2 min-w-full h-[100vh] bg-slate-200 pb-25',
@@ -29,6 +33,9 @@ export class BoardPage {
   readonly lists = this.#store.listsVm;
   readonly keyword=  this.#store.filterQuery;
   readonly loading = this.#store.loading;
+  readonly selectedCard = this.#store.selectedCard;
+
+  readonly hasSelectedCard = computed(() => Boolean(this.selectedCard()));
 
   createList({title}: {title: string}): void {
     this.#store.addList(title);
@@ -44,5 +51,22 @@ export class BoardPage {
 
   moveCard(targetListId: Id, cardId: Id, newIndex: number): void {
     this.#store.moveCard(cardId, targetListId, newIndex);
+  }
+
+  removeCard(cardId: Id): void {
+    this.#store.removeCard(cardId);
+  }
+
+  selectCard(cardId: Id | null): void {
+    this.#store.selectCard(cardId);
+  }
+
+  updateCardAction(updateCardInput: CardUpdateInput): void {
+    const selectedId = this.selectedCard()?.id;
+    if(!selectedId){
+      return;
+    }
+    this.#store.updateCard(selectedId, updateCardInput);
+    this.#store.selectCard(null);
   }
 }

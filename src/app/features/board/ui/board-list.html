@@ -20,7 +20,7 @@
      (cdkDropListDropped)="internalDrop($event)"
      class="flex-1 overflow-y-auto px-3 py-2 space-y-3 custom-scrollbar">
   @for (cardItem of list().cards; track cardItem.id) {
-    <board-card cdkDrag cdkDragPreviewContainer="parent" [card]="cardItem" />
+    <board-card (onDelete)="removeCard.emit(cardItem.id)" (onUpdate)="updateCard.emit(cardItem.id)" cdkDrag cdkDragPreviewContainer="parent" [card]="cardItem" />
   } @empty {
     <div class="min-h-[25%] flex flex-col items-center justify-center py-10 px-4 border-2 border-dashed border-slate-200 rounded-xl">
       <p class="text-xs text-slate-400 font-medium">No cards in this list</p>
@@ -42,7 +42,7 @@
 
 <p-dialog maskStyleClass="backdrop-blur-sm"
           [(visible)]="cardCreateModalVisible"
-          header="Ajouter une nouvelle carte"
+          header="Add a new card"
           [style]="{ width: '50rem' }">
   <ng-template #headless>
     <board-card-form-modal (closed)="cardCreateModalVisible.set(false)" (created)="addCardAction($event)" />

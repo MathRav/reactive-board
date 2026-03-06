@@ -21,6 +21,7 @@ import {CdkDragPlaceholder} from '@angular/cdk/drag-drop';
 })
 export class BoardCard {
   onDelete = output();
+  onUpdate = output();
   card = input.required<Card>();
 
   statusClasses: Record<string, string> = {

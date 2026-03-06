@@ -12,8 +12,8 @@ Kanban board app (`fintech-store`) -- used as the practice vehicle for NgRx Sign
 | 1 | `withState` + `withMethods` | Core board: lists, cards, CRUD | Done |
 | 2 | `withComputed` | `listsVm`, filtered cards, selected card | Done |
 | 3 | `withHooks` | Persist board to localStorage | Done |
-| 4 | `rxMethod` | Debounced search, simulated API calls | In Progress |
-| 5 | `withLinkedState` | Writable state that resets when a source signal changes | Pending |
+| 4 | `rxMethod` | Debounced search, simulated API calls | Done |
+| 5 | `linkedSignal` | Card edit form resets when selected card changes | In Progress |
 | 6 | State tracking | Undo/redo for card moves | Pending |
 | 7 | Custom store features | Extract reusable `withPersistence(key)` | Pending |
 | 8 | Entity management | Migrate `cards: Record<Id, Card>` to `withEntities` | Pending |
@@ -50,6 +50,20 @@ Kanban board app (`fintech-store`) -- used as the practice vehicle for NgRx Sign
 - Key concepts: rxMethod, RxJS pipelines inside signal store, debounceTime, switchMap, tapResponse, optimistic updates, error revert
 - Spec summary: Two features — (A) convert search to debounced type-ahead using rxMethod<string> with debounceTime+distinctUntilChanged, (B) simulated async card archival using rxMethod<Id> with switchMap+timer+tapResponse for optimistic update/revert pattern
 - Review notes: --
+
+## Milestone 4 -- rxMethod -- Done
+- Key concepts: rxMethod, switchMap as async boundary, tapResponse for safe error handling, loading state
+- Spec summary: loadBoard rxMethod with cache-hit (localStorage) vs cache-miss (timer mock) paths, tapResponse for success/error, loading flag in BoardState
+- Review notes: Fixed timeout→switchMap+timer, redundant spread, finalize→tapResponse, loading added to BoardState. Clean final implementation.
+
+## Milestone 5 -- linkedSignal -- Done
+- Key concepts: linkedSignal, derived writable state, reset semantics, linkedSignal vs computed vs effect
+- Spec summary: Replace effect()-driven form sync in BoardCardFormModal with linkedSignal; complete card edit UX (select → open modal → edit → save → deselect)
+- Review notes:
+  - Clean linkedSignal in form modal, full edit flow, dual-mode component
+  - Fixed: state sync (onHide + one-way [visible] binding), decoupled deselection from store, naming, dialog header
+  - Developer correctly switched hasSelectedCard from linkedSignal to computed after removing the two-way binding need
+  - Mastered: linkedSignal primary use case, knows when computed vs linkedSignal vs effect is appropriate
 
 ## Notes
 - Developer identified the full curriculum themselves -- good self-direction

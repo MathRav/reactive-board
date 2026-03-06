@@ -1,4 +1,4 @@
-import {Component, computed, effect, input, output, signal} from '@angular/core';
+import {Component, computed, input, linkedSignal, output, signal} from '@angular/core';
 import {Card, StatusEnum} from '../../store/board-state.types';
 import {CardFormModel} from './board-card-form-modal.type';
 import {CardUpdateInput, CreateCardInput} from '../../store/board-actions.type';
@@ -54,26 +54,16 @@ export class BoardCardFormModal {
     {label: 'Done', value: StatusEnum.DONE},
   ];
 
-  private readonly cardFormModel = signal<CardFormModel>({
-    title: '',
-    description: '',
-    priority: null,
-    labels: [],
-    assignee: null,
-    dueDate: null,
-    status: StatusEnum.TODO,
-  });
+  private readonly cardFormModel = linkedSignal<CardFormModel>(
+    () => {
+      const card = this.card();
+      return card ? cardToFormModel(card) : emptyFormModel();
+    }
+  );
 
   protected readonly cardForm = form(this.cardFormModel, (schemaPath) => {
     required(schemaPath.title, {message: 'Title is required'});
   });
-
-  constructor() {
-    effect(() => {
-      const card = this.card();
-      this.cardFormModel.set(card ? cardToFormModel(card) : emptyFormModel());
-    });
-  }
 
   protected addLabel(): void {
     const label = this.labelForm().value().trim();

@@ -27,6 +27,8 @@ export class BoardList {
   readonly dropped = output<{cardId: Id,currentIndex: number}>();
   readonly addCard = output<CreateCardInput>();
   readonly removeCard = output<Id>();
+  readonly updateCard = output<Id>();
+
 
   readonly list = input.required<ListVm>();
 

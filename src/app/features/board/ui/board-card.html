@@ -1,5 +1,6 @@
-<div class="flex items-center justify-end">
-  <p-button icon="pi pi-trash" />
+<div class="flex items-center justify-end mb-3 gap-3">
+  <p-button ariaLabel="Supprimer" (onClick)="onDelete.emit()" title="Supprimer" icon="pi pi-trash" />
+  <p-button severity="secondary" (onClick)="onUpdate.emit()" ariaLabel="Modifier" title="Modifier" icon="pi pi-pencil" />
 </div>
 <div class="flex items-center justify-between mb-3">
   <span [class]="'px-2 py-0.5 rounded-full text-xs font-semibold border ' + statusClasses[card().status]">
@@ -34,7 +35,7 @@
 <div class="flex items-center justify-between pt-4 border-t border-slate-100">
   <div class="flex items-center gap-2">
     <div class="h-7 w-7 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-[10px] text-white font-bold uppercase">
-      {{ card().assignee ? card().assignee?.substring(0, 2) : '??' }}
+      {{ card().assignee ? card().assignee?.substring(0, 2)   : '??' }}
     </div>
     <span class="text-xs font-medium text-slate-700">{{ card().assignee || 'Unassigned' }}</span>
   </div>
@@ -49,5 +50,5 @@
   }
 </div>
 <div *cdkDragPlaceholder class="w-full min-h-[100px] bg-white rounded-2xl flex justify-center items-center">
-  <i class="pi pi-plus"></i>
+  <i aria-label="Ajouter une colonne" class="pi pi-plus"></i>
 </div>
