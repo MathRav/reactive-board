@@ -1,15 +1,13 @@
 import {BoardState, Card, List, ListVm} from './board-state.types';
 import {
-  PartialStateUpdater,
   patchState,
   signalStore,
   withComputed,
   withHooks,
   withMethods,
-  withProps,
   withState
 } from '@ngrx/signals';
-import {computed, effect, inject} from '@angular/core';
+import {computed} from '@angular/core';
 import {Id} from '@core/store/entity-base.type';
 import {CardUpdateInput, CreateCardInput} from './board-actions.type';
 import {
@@ -19,13 +17,13 @@ import {
   removeCardInLists, updateCardData,
   updateListElement
 } from './board.util';
-import {LocalStorageService} from '@core/local-storage/local-storage.service';
-import {BOARD_LOCAL_STATE_KEY, BoardLocalState} from './board.local-state.utils';
-import {NotificationService} from '@core/errors/notification.service';
+import {BOARD_LOCAL_STATE_KEY} from './board.local-state.utils';
+import {withNotifications} from '@core/errors/with-notifications';
 import {rxMethod} from '@ngrx/signals/rxjs-interop';
 import {map, of, pipe, switchMap, tap, timer} from 'rxjs';
 import {MOCK_BOARD_STATE} from './board.mock.constants';
 import { tapResponse } from '@ngrx/operators';
+import {withPersistence} from '@core/local-storage/state/with-persistence';
 
 const initialState: BoardState = {
   boardId: null,
@@ -39,13 +37,17 @@ const initialState: BoardState = {
 }
 
 export const BoardStore = signalStore(
-  withProps(() => {
-    return {
-      _localStorageService: inject(LocalStorageService),
-      _notificationService: inject(NotificationService),
-    };
-  }),
   withState(initialState),
+  withPersistence<BoardState, Pick<BoardState, 'lists'|'cards'|'filterQuery'|'boardId'>>(
+    BOARD_LOCAL_STATE_KEY,
+    ({lists, cards, filterQuery, boardId}) => ({
+      lists: lists(),
+      cards: cards(),
+      filterQuery: filterQuery(),
+      boardId: boardId()
+    })
+  ),
+  withNotifications(),
   withComputed(({ lists, cards, selectedCardId, filterQuery, history, future }) => ({
     listsVm: computed((): ListVm[] => {
       const listsValue = lists();
@@ -75,12 +77,13 @@ export const BoardStore = signalStore(
     canRedo: computed(() => Boolean(future().length)),
   })),
   withMethods((store) => {
-    const {cards, selectedCardId, lists, _notificationService, _localStorageService, history, future} = store;
+    const {cards, selectedCardId, lists, _notificationService, history, future, getPersistedState} = store;
 
     /**
      * @param cardId
      * @param toListId
      * @param index
+     * @param mutateHistory
      */
     const moveCard = (cardId: Id, toListId: Id, index?: number, mutateHistory: boolean = true): void  => {
       const listsValue = lists();
@@ -267,7 +270,7 @@ export const BoardStore = signalStore(
             loading: true
           })),
           switchMap((id) => {
-            const cached = _localStorageService.get<BoardLocalState>(BOARD_LOCAL_STATE_KEY);
+            const cached = getPersistedState();
             if(cached){
               return of(cached)
             } else {
@@ -329,9 +332,6 @@ export const BoardStore = signalStore(
         }
 
         const newHistoryValue = [...historyValue, lastElement] ;
-        console.log({
-          future: futureValue.slice(0,-1)
-        })
 
         moveCard(lastElement.cardId, lastElement.toListId, lastElement.toIndex, false);
 
@@ -344,22 +344,8 @@ export const BoardStore = signalStore(
   }),
   withHooks({
     onInit: (store) => {
-      const {lists, cards, filterQuery, _notificationService, _localStorageService, loadBoard, boardId} = store;
+      const {loadBoard} = store;
       loadBoard(MOCK_BOARD_STATE.boardId);
-
-      effect(() => {
-        try{
-          _localStorageService.set(BOARD_LOCAL_STATE_KEY, {
-            lists: lists(),
-            cards: cards(),
-            filterQuery: filterQuery(),
-            boardId: boardId()
-          });
-        }
-        catch (error: unknown){
-          _notificationService.error('An error occured when saving data to local storage', error);
-        }
-      });
     },
   }),
 );

@@ -13,9 +13,9 @@ Kanban board app (`fintech-store`) -- used as the practice vehicle for NgRx Sign
 | 2 | `withComputed` | `listsVm`, filtered cards, selected card | Done |
 | 3 | `withHooks` | Persist board to localStorage | Done |
 | 4 | `rxMethod` | Debounced search, simulated API calls | Done |
-| 5 | `linkedSignal` | Card edit form resets when selected card changes | In Progress |
-| 6 | State tracking | Undo/redo for card moves | Pending |
-| 7 | Custom store features | Extract reusable `withPersistence(key)` | Pending |
+| 5 | `linkedSignal` | Card edit form resets when selected card changes | Done |
+| 6 | State tracking | Undo/redo for card moves | Done |
+| 7 | Custom store features | Extract reusable `withPersistence(key)` | Reviewed |
 | 8 | Entity management | Migrate `cards: Record<Id, Card>` to `withEntities` | Pending |
 | 9 | Events | Emit events when card moves to DONE | Pending |
 
@@ -64,6 +64,35 @@ Kanban board app (`fintech-store`) -- used as the practice vehicle for NgRx Sign
   - Fixed: state sync (onHide + one-way [visible] binding), decoupled deselection from store, naming, dialog header
   - Developer correctly switched hasSelectedCard from linkedSignal to computed after removing the two-way binding need
   - Mastered: linkedSignal primary use case, knows when computed vs linkedSignal vs effect is appropriate
+
+## Milestone 6 -- State tracking (Undo/Redo) -- Reviewed
+- Key concepts: command pattern undo, history/future stacks, bounded history, atomic state transitions
+- Spec summary: Undo/redo for card moves using history[] and future[] arrays in BoardState, MoveRecord type, canUndo/canRedo computed, BoardToolbar presentational component
+- Review notes:
+  - GOOD: Clean MoveRecord type, mutateHistory flag to prevent recursive history in undo/redo, bounded history (20), dumb toolbar component, computed for canUndo/canRedo
+  - REQUIRED FIX: Double patchState in undo/redo -- moveCard does one patchState, then undo/redo does another for history/future. Must be consolidated into single atomic patchState.
+  - MINOR: cardIndexInList return type says `number | undefined` but findIndex returns -1, not undefined. Type is misleading.
+  - DESIGN NOTE: history/future not persisted to localStorage (intentional or accidental -- developer should decide)
+  - FRAGILITY: undo/redo reads history/future signals before calling moveCard, then overwrites after. Works only because mutateHistory=false does not touch those fields. Implicit contract.
+  - NO TESTS for undo/redo
+  - Ready for M7 after atomicity fix
+  - Developer dismissed double-patchState concern (Angular batches signal updates synchronously)
+
+## Milestone 7 -- Custom Store Features (withPersistence) -- Done
+- Key concepts: signalStoreFeature, custom feature authoring, Input constraint overload, type<T>(), getState(), schema versioning, generic reusable store features
+- Spec summary: Extract inline localStorage persistence from withHooks into a generic withPersistence(config) custom feature. Config takes key, select function, version. Versioned envelope in localStorage.
+- Actual location: src/core/local-storage/state/with-persistence.ts (dev chose different path than spec)
+- Bonus: withNotifications feature at src/core/errors/with-notifications.ts, LOCAL_STORAGE injection token at src/core/local-storage/local-storage.token.ts
+- Review notes:
+  - GOOD: Correct signalStoreFeature with Input constraint + type<T>(), clean store composition order, withNotifications extraction, LOCAL_STORAGE token for testability, remove() added to LocalStorageService, stale console.log cleaned
+  - BUG: getPersistedState returns envelope with version -- version leaks into patchState. Must use { version, data } envelope and strip version on read.
+  - BUG: getPersistedState uses unconstrained <R> generic instead of outer T -- provides no type safety
+  - STILL MISSING: LocalStorageService.get does not try/catch JSON.parse (deferred since M3)
+  - DESIGN: select() receives StateSignals but cast with `as unknown as` -- should use getState() for plain values
+  - DESIGN: No auto-hydration in onInit -- hydration delegated to consumer via getPersistedState() method. Feature is utility-shaped rather than self-contained.
+  - NOTE: board.local-state.utils.ts kept intentionally as centralized localStorage key registry (developer decision)
+  - FIXES APPLIED: envelope { version, data } structure correct, getPersistedState returns data.data on hit, try/catch wraps _localStorage.get
+  - OPTIONAL: auto-hydration, remove <R> generic, eliminate as-unknown-as cast
 
 ## Notes
 - Developer identified the full curriculum themselves -- good self-direction
