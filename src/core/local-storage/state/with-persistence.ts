@@ -1,4 +1,4 @@
-import {signalStoreFeature, StateSignals, type, withHooks, withMethods, withProps} from '@ngrx/signals';
+import {signalStoreFeature, StateSignals, withHooks, withMethods, withProps} from '@ngrx/signals';
 import {effect, inject} from '@angular/core';
 import {LocalStorageService} from '@core/local-storage/local-storage.service';
 import {NotificationService} from '@core/errors/notification.service';
@@ -10,14 +10,13 @@ export function withPersistence<State extends object, T extends object>(
   version: number = 1
 ) {
   return signalStoreFeature(
-    { state: type<State>() },
     withProps(() => ({
       _localStorage: inject(LocalStorageService),
     })),
     withMethods(({_localStorage}) => ({
-      getPersistedState: <R>() => {
+      getPersistedState: (): T | null => {
         try{
-          const data = _localStorage.get<{ data: R , version: number}>(key);
+          const data = _localStorage.get<{ data: T , version: number}>(key);
           if(data && data?.data && version === data.version){
             return data.data;
           } else {

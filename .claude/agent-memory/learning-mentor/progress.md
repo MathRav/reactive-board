@@ -16,7 +16,7 @@ Kanban board app (`fintech-store`) -- used as the practice vehicle for NgRx Sign
 | 5 | `linkedSignal` | Card edit form resets when selected card changes | Done |
 | 6 | State tracking | Undo/redo for card moves | Done |
 | 7 | Custom store features | Extract reusable `withPersistence(key)` | Reviewed |
-| 8 | Entity management | Migrate `cards: Record<Id, Card>` to `withEntities` | Pending |
+| 8 | Entity management | Migrate `cards: Record<Id, Card>` to `withEntities` | Planned |
 | 9 | Events | Emit events when card moves to DONE | Pending |
 
 ---
@@ -93,6 +93,13 @@ Kanban board app (`fintech-store`) -- used as the practice vehicle for NgRx Sign
   - NOTE: board.local-state.utils.ts kept intentionally as centralized localStorage key registry (developer decision)
   - FIXES APPLIED: envelope { version, data } structure correct, getPersistedState returns data.data on hit, try/catch wraps _localStorage.get
   - OPTIONAL: auto-hydration, remove <R> generic, eliminate as-unknown-as cast
+
+## Milestone 8 -- Entity Management (withEntities) -- Planned
+- Resources: @ngrx/signals/entities API (withEntities, addEntity, removeEntity, updateEntity, setAllEntities, EntityMap, EntityState)
+- Key concepts: withEntities<Card>(), entity updater functions as PartialStateUpdater, composing entity updaters with plain patches in patchState, EntityMap vs Record, entityMap/ids/entities signals
+- Spec summary: Migrate cards from hand-rolled Record<Id, Card> to withEntities<Card>(). No new features -- pure refactor. All 7 card-touching methods rewritten to use entity API. Persistence updated to read entityMap, version bumped to invalidate stale cache.
+- Files affected: board-state.types.ts, board.store.ts, board.util.ts, board.mock.constants.ts
+- 15 tasks, 3 stretch goals
 
 ## Notes
 - Developer identified the full curriculum themselves -- good self-direction

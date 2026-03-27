@@ -1,11 +1,11 @@
 import {Id} from '@core/store/entity-base.type';
 import {BoardState, Card, List} from './board-state.types';
-import {CardUpdateInput} from './board-actions.type';
+import {EntityMap} from '@ngrx/signals/entities';
 
-export const cardById =  (id: Id, cards: BoardState['cards']): Card | null => cards[id] ?? null;
+export const cardById =  (id: Id, cards: EntityMap<Card>): Card | null => cards[id] ?? null;
 export const listById =  (id: Id,lists: BoardState['lists']): List | null => lists.find((list) => list.id === id) ?? null;
 export const listByCardId =  (cardId: Id, lists: BoardState['lists']): List | null => lists.find((list) => list.cardIds.includes(cardId)) ?? null;
-export const cardIndexInList = (cardId: Id, list: List): number | undefined => list.cardIds.findIndex((findId) => findId === cardId);
+export const cardIndexInList = (cardId: Id, list: List): number => list.cardIds.findIndex((findId) => findId === cardId);
 
 export const removeCardInList = (cardId: Id, list: List): List => {
   if(!list.cardIds.includes(cardId)){
@@ -80,24 +80,3 @@ export const moveCardInList = (
 
 
 export const updateListElement = (listToUpdate: List, lists: BoardState['lists']): BoardState['lists'] => lists.map((listInMap) => listInMap.id === listToUpdate.id ? listToUpdate : listInMap);
-
-export const updateCardData = (
-  card: Card, updates: CardUpdateInput, now = Date.now): Card => {
-  let changed = false;
-  const clean = {} as Partial<Pick<Card, keyof CardUpdateInput>>;
-
-  for (const k of Object.keys(updates) as (keyof CardUpdateInput)[]) {
-    const v = updates[k];
-    if (v === undefined) continue;
-    if (card[k] !== v) changed = true;
-    (clean as Record<string, unknown>)[k] = v;
-  }
-
-  if (!changed) return card;
-
-  return {
-    ...card,
-    ...clean,
-    lastUpdatedAt: now(),
-  };
-};

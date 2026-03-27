@@ -22,7 +22,7 @@ const daysAgo = (n: number) => now - n * DAY;
 const daysFromNow = (n: number) => now + n * DAY;
 
 // ── Cards ───────────────────────────────────────────────────
-const MOCK_CARDS: Record<Id, Card> = {
+export const MOCK_CARDS: Record<Id, Card> = {
   [TODO_1]: {
     id: TODO_1,
     title: 'Set up CI pipeline',
@@ -125,7 +125,6 @@ const MOCK_LISTS: List[] = [
 export const MOCK_BOARD_STATE = {
   boardId: 'board-fintech-001',
   lists: MOCK_LISTS,
-  cards: MOCK_CARDS,
   selectedCardId: null,
   filterQuery: '',
   loading:false,

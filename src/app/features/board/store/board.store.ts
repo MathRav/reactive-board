@@ -1,7 +1,7 @@
 import {BoardState, Card, List, ListVm} from './board-state.types';
 import {
   patchState,
-  signalStore,
+  signalStore, type,
   withComputed,
   withHooks,
   withMethods,
@@ -14,20 +14,26 @@ import {
   cardById, cardIndexInList, listByCardId,
   listById,
   moveCardInList,
-  removeCardInLists, updateCardData,
+  removeCardInLists,
   updateListElement
 } from './board.util';
 import {BOARD_LOCAL_STATE_KEY} from './board.local-state.utils';
 import {withNotifications} from '@core/errors/with-notifications';
 import {rxMethod} from '@ngrx/signals/rxjs-interop';
 import {map, of, pipe, switchMap, tap, timer} from 'rxjs';
-import {MOCK_BOARD_STATE} from './board.mock.constants';
+import {MOCK_BOARD_STATE, MOCK_CARDS} from './board.mock.constants';
 import { tapResponse } from '@ngrx/operators';
 import {withPersistence} from '@core/local-storage/state/with-persistence';
+import {
+  addEntity,
+  NamedEntityState,
+  removeEntity, setEntities,
+  updateEntity,
+  withEntities
+} from '@ngrx/signals/entities';
 
 const initialState: BoardState = {
   boardId: null,
-  cards: {},
   filterQuery: '',
   lists: [],
   selectedCardId: null,
@@ -36,23 +42,17 @@ const initialState: BoardState = {
   future: [],
 }
 
+const CardCollection = 'card' as const;
+
 export const BoardStore = signalStore(
+  withEntities({entity: type<Card>(), collection: CardCollection}),
   withState(initialState),
-  withPersistence<BoardState, Pick<BoardState, 'lists'|'cards'|'filterQuery'|'boardId'>>(
-    BOARD_LOCAL_STATE_KEY,
-    ({lists, cards, filterQuery, boardId}) => ({
-      lists: lists(),
-      cards: cards(),
-      filterQuery: filterQuery(),
-      boardId: boardId()
-    })
-  ),
   withNotifications(),
-  withComputed(({ lists, cards, selectedCardId, filterQuery, history, future }) => ({
+  withComputed(({ lists, cardEntityMap, filterQuery, history, future, selectedCardId }) => ({
     listsVm: computed((): ListVm[] => {
       const listsValue = lists();
       const q = filterQuery().trim();
-      const cardsValue = cards();
+      const cardsValue = cardEntityMap();
 
       return listsValue.map((currentList) => ({
         id: currentList.id,
@@ -70,14 +70,27 @@ export const BoardStore = signalStore(
     }),
     selectedCard: computed(() => {
       const id = selectedCardId();
-      const cardsValue = cards();
+      const cardsValue = cardEntityMap();
       return id ? cardsValue[id] ?? null : null;
     }),
     canUndo: computed(() => Boolean(history().length)),
     canRedo: computed(() => Boolean(future().length)),
   })),
+  withPersistence<BoardState & NamedEntityState<Card, typeof CardCollection>, Pick<BoardState, 'lists'|'filterQuery'|'boardId'> & Pick<NamedEntityState<Card, typeof CardCollection>, 'cardEntityMap' >>(
+    BOARD_LOCAL_STATE_KEY,
+    (store) => {
+      const {lists, cardEntityMap,  filterQuery, boardId} = store;
+      return ({
+        lists: lists(),
+        cardEntityMap: cardEntityMap(),
+        filterQuery: filterQuery(),
+        boardId: boardId()
+      });
+    },
+    2
+  ),
   withMethods((store) => {
-    const {cards, selectedCardId, lists, _notificationService, history, future, getPersistedState} = store;
+    const {cardEntityMap: cards, selectedCardId, lists, _notificationService, history, future, getPersistedState} = store;
 
     /**
      * @param cardId
@@ -129,13 +142,6 @@ export const BoardStore = signalStore(
 
         const mutations: Partial<BoardState> = ({
           lists: updatedLists,
-          cards: {
-            ...state.cards,
-            [cardId]: {
-              ...state.cards[cardId],
-              lastUpdatedAt: Date.now()
-            }
-          },
         });
 
         if(mutateHistory){
@@ -144,13 +150,13 @@ export const BoardStore = signalStore(
             fromListId: initialList.id,
             fromIndex: initialCardIndex,
             toListId: finalTargetList.id,
-            toIndex: cardIndexInList(cardId, finalTargetList) as number,
+            toIndex: cardIndexInList(cardId, finalTargetList),
           }].slice(-20);
           mutations['future'] =  []
         }
 
         return mutations;
-      });
+      }, updateEntity({ id: cardId, changes: { lastUpdatedAt: Date.now() } }, { collection: CardCollection }));
     };
 
     return {
@@ -175,15 +181,11 @@ export const BoardStore = signalStore(
             throw new Error("The list does not exist");
           }
           return {
-            cards: {
-              ...state.cards,
-              [targetId]: newCard,
-            },
             lists: state.lists.map((l) =>
               l.id === listId ? {...l, cardIds: [...l.cardIds, targetId]} : l
             ),
           };
-        });
+        }, addEntity(newCard,{collection: CardCollection}));
         return targetId;
       },
       removeCard(cardId: Id): void {
@@ -203,11 +205,6 @@ export const BoardStore = signalStore(
         patchState(store, (state) => {
           const updates: Partial<BoardState> = {};
 
-          if (state.cards[cardId] !== undefined) {
-            const { [cardId]: _removed, ...rest } = state.cards;
-            updates.cards = rest;
-          }
-
           if (nextLists !== state.lists) {
             updates.lists = nextLists;
           }
@@ -217,7 +214,7 @@ export const BoardStore = signalStore(
           }
 
           return updates;
-        });
+        }, removeEntity(cardId, {collection: CardCollection}));
       },
       addList(title: string): void {
         patchState(store, ({lists}) =>  {
@@ -250,18 +247,10 @@ export const BoardStore = signalStore(
           return;
         }
 
-        const updatedCard: Card = updateCardData(card, updates);
-
-        if(updatedCard === card){
-          return;
-        }
-
-        patchState(store, (state) => ({
-          cards: {
-            ...state.cards,
-            [cardId]: updatedCard,
-          },
-        }))
+        patchState(store, updateEntity({id: cardId, changes: {
+            ...updates,
+            lastUpdatedAt: Date.now()
+        }}, {collection: CardCollection}))
       },
       moveCard,
       loadBoard: rxMethod<Id>(
@@ -278,15 +267,19 @@ export const BoardStore = signalStore(
                 map(() => ({
                   ...MOCK_BOARD_STATE,
                   boardId: id,
+                  cardEntityMap: MOCK_CARDS
                 }))
               )
             }
           }),
           tapResponse({
-              next: (data) => patchState(store, {
-                ...data,
-                loading: false,
-              }),
+              next: (data) => {
+                const {cardEntityMap, ...rest} = data;
+                return patchState(store, {
+                  ...rest,
+                  loading: false,
+                }, setEntities(Object.values(cardEntityMap), {collection: CardCollection}));
+              },
               error: (error) => {
                 _notificationService.error('An error occured during the initialization of the board', error);
                 patchState(store, {loading: false})

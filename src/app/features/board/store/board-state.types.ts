@@ -30,7 +30,6 @@ export type ListVm = EntityBase & Pick<List, 'title'> & {
 }
 export type BoardState =  {
   lists: List[];
-  cards: Record<Id, Card>;
   boardId: Id | null;
   selectedCardId: Id | null;
   filterQuery: string;

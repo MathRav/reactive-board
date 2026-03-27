@@ -22,7 +22,6 @@ describe('BoardStore', () => {
       cards,
       lists
     }: {
-      cards: BoardState['cards'],
       lists: BoardState['lists']
     }
   ) => {
